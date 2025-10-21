@@ -5,6 +5,7 @@
 
 import os
 import sys
+import time
 import argparse
 from pathlib import Path
 from typing import List
@@ -91,17 +92,36 @@ class BatchProcessor:
         # 创建进度条
         pbar = None
         last_frame_count = 0
+        start_time = None
         
         def progress_callback(frame, timestamp, has_motion, current_frame, total_frames):
-            nonlocal pbar, last_frame_count
+            nonlocal pbar, last_frame_count, start_time
             if pbar is None:
                 pbar = tqdm(total=total_frames, unit='帧', desc="处理进度")
+                start_time = time.time()
             
             # 更新进度：计算自上次回调以来处理的帧数
             frames_processed = current_frame - last_frame_count
             if frames_processed > 0:
                 pbar.update(frames_processed)
                 last_frame_count = current_frame
+            
+            # 计算处理速度和预计剩余时间
+            elapsed = time.time() - start_time
+            if elapsed > 0 and current_frame > 0:
+                fps = current_frame / elapsed
+                remaining_frames = total_frames - current_frame
+                eta = remaining_frames / fps if fps > 0 else 0
+                
+                # 格式化时间戳
+                timestamp_str = f"{int(timestamp//60):02d}:{int(timestamp%60):02d}"
+                
+                # 更新进度条显示信息
+                pbar.set_postfix({
+                    '速度': f'{fps:.1f}帧/s',
+                    '剩余': f'{int(eta)}s',
+                    '时间': timestamp_str
+                })
             
             # 如果启用预览
             if self.preview and has_motion:
@@ -119,7 +139,18 @@ class BatchProcessor:
                 callback=progress_callback
             )
             
+            # 确保进度条达到100%（处理最后几帧）
             if pbar:
+                # 获取视频总帧数
+                cap = cv2.VideoCapture(str(video_path))
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                cap.release()
+                
+                # 如果还有未更新的帧，更新到100%
+                remaining = total_frames - last_frame_count
+                if remaining > 0:
+                    pbar.update(remaining)
+                
                 pbar.close()
             
             # 保存提取的帧
