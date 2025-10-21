@@ -7,20 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Added
+- **Video Output with Motion Visualization** - Generate annotated videos showing detected motion
+  - Draws green contours around motion regions
+  - Displays red bounding boxes for each motion area
+  - Shows area labels (in pixels) for each contour
+  - Overlays timestamp (HH:MM:SS) and contour count on each frame
+  - Output filename format: `{video_name}_motion_detected.mp4`
+  - Enabled via `--output-video` CLI flag
+  - See [FEATURE_VIDEO_OUTPUT.md](./FEATURE_VIDEO_OUTPUT.md) for full documentation
+  
+- **Enhanced Motion Detection API** - MotionDetector now returns contours list
+  - New return signature: `(has_motion, motion_mask, contours)`
+  - Enables advanced visualization and analysis
+  
+### 📚 Documentation
+- Added comprehensive video output feature documentation
+- Updated README.md and README_CN.md with new feature descriptions
+- Added usage examples for video output mode
+
 ### 🐛 Fixed
 - **Progress Bar Display (Updated)** - Fixed multiple progress bar issues
   - Short videos (e.g., 10s) now correctly show 100% completion
   - Previous fix for ~7% stuck issue
   - Ensures all frames are accounted for in progress calculation
   
-### ✨ Added
+### ✨ Enhanced
 - **Enhanced Progress Information** - Rich real-time processing details
   - Processing speed display (frames/sec)
   - Estimated time remaining (seconds)
   - Current video timestamp (MM:SS format)
   - All displayed using tqdm's set_postfix for clean output
   
-### 📚 Documentation
+### 📚 Previous Documentation
 - See [BUGFIX_PROGRESS_ENHANCEMENT.md](./BUGFIX_PROGRESS_ENHANCEMENT.md) for details
 
 ## [1.0.0] - 2025-10-21

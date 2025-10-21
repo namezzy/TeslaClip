@@ -24,7 +24,8 @@ class BatchProcessor:
                  min_interval: float = 1.0,
                  fps: int = 2,
                  image_format: str = 'jpg',
-                 preview: bool = False):
+                 preview: bool = False,
+                 output_video: bool = False):
         """
         初始化批量处理器
         
@@ -35,6 +36,7 @@ class BatchProcessor:
             fps: 处理帧率
             image_format: 输出图像格式
             preview: 是否显示预览窗口
+            output_video: 是否生成带轮廓标注的输出视频
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,7 @@ class BatchProcessor:
         self.fps = fps
         self.image_format = image_format.lower()
         self.preview = preview
+        self.output_video = output_video
         self.processor = VideoProcessor(sensitivity, min_interval, fps)
         
         self.total_videos = 0
@@ -133,10 +136,17 @@ class BatchProcessor:
                     return False
         
         try:
+            # 准备输出视频路径（如果需要）
+            output_video_path = None
+            if self.output_video:
+                video_name = video_path.stem
+                output_video_path = str(self.output_dir / f"{video_name}_motion_detected.mp4")
+            
             # 处理视频
             extracted_frames = self.processor.process_video(
                 str(video_path),
-                callback=progress_callback
+                callback=progress_callback,
+                output_video_path=output_video_path
             )
             
             # 确保进度条达到100%（处理最后几帧）
@@ -229,6 +239,9 @@ def main():
   
   # 启用预览模式（用于调试）
   python main.py -i video.mp4 --preview
+  
+  # 输出带有运动检测轮廓的视频
+  python main.py -i video.mp4 --output-video
         """
     )
     
@@ -246,6 +259,8 @@ def main():
                        help='输出图像格式 (默认: jpg)')
     parser.add_argument('--preview', action='store_true',
                        help='启用实时预览（用于调试参数）')
+    parser.add_argument('--output-video', action='store_true',
+                       help='输出带有运动检测轮廓的视频文件')
     
     args = parser.parse_args()
     
@@ -269,7 +284,8 @@ def main():
         min_interval=args.min_interval,
         fps=args.fps,
         image_format=args.format,
-        preview=args.preview
+        preview=args.preview,
+        output_video=args.output_video
     )
     
     try:

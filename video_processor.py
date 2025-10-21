@@ -5,7 +5,7 @@
 
 import cv2
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 
 class MotionDetector:
@@ -28,7 +28,7 @@ class MotionDetector:
             detectShadows=False
         )
     
-    def detect_motion(self, frame: np.ndarray) -> Tuple[bool, np.ndarray]:
+    def detect_motion(self, frame: np.ndarray) -> Tuple[bool, np.ndarray, List]:
         """
         检测单帧中的运动
         
@@ -36,7 +36,7 @@ class MotionDetector:
             frame: 输入视频帧 (BGR格式)
             
         Returns:
-            (has_motion, motion_mask): 是否检测到运动，以及运动区域的掩码
+            (has_motion, motion_mask, contours): 是否检测到运动、运动区域的掩码、检测到的轮廓列表
         """
         # 转换为灰度图
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -45,7 +45,7 @@ class MotionDetector:
         # 如果是第一帧，初始化
         if self.prev_frame is None:
             self.prev_frame = gray
-            return False, np.zeros_like(gray)
+            return False, np.zeros_like(gray), []
         
         # 计算帧差
         frame_diff = cv2.absdiff(self.prev_frame, gray)
@@ -62,17 +62,18 @@ class MotionDetector:
         # 查找轮廓
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # 判断是否有足够大的运动区域
+        # 过滤出足够大的运动区域轮廓
         has_motion = False
+        motion_contours = []
         for contour in contours:
             if cv2.contourArea(contour) > self.min_area:
                 has_motion = True
-                break
+                motion_contours.append(contour)
         
         # 更新前一帧
         self.prev_frame = gray
         
-        return has_motion, thresh
+        return has_motion, thresh, motion_contours
     
     def reset(self):
         """重置检测器状态"""
@@ -109,13 +110,15 @@ class VideoProcessor:
     
     def process_video(self, 
                      video_path: str,
-                     callback=None) -> list:
+                     callback=None,
+                     output_video_path: Optional[str] = None) -> list:
         """
         处理单个视频文件
         
         Args:
             video_path: 视频文件路径
-            callback: 回调函数，接收 (frame, timestamp, has_motion) 参数
+            callback: 回调函数，接收 (frame, timestamp, has_motion, current_frame, total_frames) 参数
+            output_video_path: 输出视频路径，如果指定则将检测到运动的帧写入视频并绘制轮廓
             
         Returns:
             提取的帧列表，每个元素为 (frame, timestamp) 元组
@@ -128,7 +131,18 @@ class VideoProcessor:
         # 获取视频信息
         video_fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         duration = total_frames / video_fps if video_fps > 0 else 0
+        
+        # 初始化视频写入器（如果需要）
+        video_writer = None
+        if output_video_path:
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            video_writer = cv2.VideoWriter(output_video_path, fourcc, video_fps, (width, height))
+            if not video_writer.isOpened():
+                print(f"警告: 无法创建输出视频文件: {output_video_path}")
+                video_writer = None
         
         # 计算帧间隔
         frame_interval = int(video_fps / self.process_fps) if video_fps > 0 else 1
@@ -150,12 +164,37 @@ class VideoProcessor:
                 current_time = frame_count / video_fps if video_fps > 0 else 0
                 
                 # 检测运动
-                has_motion, motion_mask = self.motion_detector.detect_motion(frame)
+                has_motion, motion_mask, contours = self.motion_detector.detect_motion(frame)
                 
-                # 如果检测到运动且距离上次提取已超过最小间隔
-                if has_motion and (current_time - last_extract_time) >= self.min_interval:
-                    extracted_frames.append((frame.copy(), current_time))
-                    last_extract_time = current_time
+                # 如果检测到运动
+                if has_motion:
+                    # 提取截图（如果距离上次提取已超过最小间隔）
+                    if (current_time - last_extract_time) >= self.min_interval:
+                        extracted_frames.append((frame.copy(), current_time))
+                        last_extract_time = current_time
+                    
+                    # 写入视频（如果启用）
+                    if video_writer:
+                        # 绘制运动检测轮廓
+                        output_frame = frame.copy()
+                        cv2.drawContours(output_frame, contours, -1, (0, 255, 0), 2)
+                        
+                        # 绘制边界框和信息
+                        for contour in contours:
+                            x, y, w, h = cv2.boundingRect(contour)
+                            cv2.rectangle(output_frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                            area = cv2.contourArea(contour)
+                            cv2.putText(output_frame, f"Area: {int(area)}", (x, y - 10),
+                                      cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                        
+                        # 添加时间戳和运动检测标记
+                        timestamp_str = self.format_timestamp(current_time)
+                        cv2.putText(output_frame, f"Motion Detected at {timestamp_str}", (10, 30),
+                                  cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        cv2.putText(output_frame, f"Contours: {len(contours)}", (10, 70),
+                                  cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                        
+                        video_writer.write(output_frame)
                 
                 # 调用回调函数（每个间隔帧调用一次）
                 if callback:
@@ -164,6 +203,9 @@ class VideoProcessor:
             frame_count += 1
         
         cap.release()
+        if video_writer:
+            video_writer.release()
+            
         return extracted_frames
     
     @staticmethod

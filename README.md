@@ -25,6 +25,7 @@ TeslaClip is a powerful computer vision tool that automatically extracts key mom
 
 - 🎥 **Smart Motion Detection** - Advanced frame differencing algorithm detects activity automatically
 - 📸 **Auto Screenshot Extraction** - Saves key frames when motion is detected
+- 🎬 **Video Output with Contours** - Generate videos with motion detection visualization (NEW!)
 - ⏰ **Timestamp Naming** - Files named with video timestamp (e.g., `00h05m30s.jpg`) for easy navigation
 - 📦 **Batch Processing** - Process multiple videos or entire folders at once
 - ⚙️ **Configurable Parameters** - Fine-tune sensitivity, interval, and FPS for different scenarios
@@ -56,6 +57,9 @@ python3 main.py -i your_video.mp4
 # Process entire folder
 python3 main.py -i /path/to/tesla/videos -o ./output
 
+# Generate video with motion contours (NEW!)
+python3 main.py -i video.mp4 --output-video
+
 # Preview mode for parameter tuning
 python3 main.py -i video.mp4 --preview
 ```
@@ -81,6 +85,7 @@ python3 create_test_video.py
 | `--fps` | Processing frame rate | `2` |
 | `--format` | Output format (jpg/png) | `jpg` |
 | `--preview` | Enable real-time preview window | `false` |
+| `--output-video` | Generate video with motion detection visualization | `false` |
 
 ### 🎨 Usage Examples
 
@@ -113,6 +118,31 @@ extracted_frames/
 ```
 
 Filename format: `{video_name}_{HH}h{MM}m{SS}s.{format}`
+
+### 🎬 Video Output Feature (NEW!)
+
+Generate annotated videos showing motion detection in real-time:
+
+```bash
+python3 main.py -i video.mp4 --output-video -s 25
+```
+
+**Visualization includes:**
+- 🟢 **Green contours** - Detected motion boundaries
+- 🔴 **Red bounding boxes** - Minimum enclosing rectangles
+- 🔢 **Area labels** - Size of each motion region in pixels
+- ⏱️ **Timestamps** - Current video time (HH:MM:SS)
+- 📊 **Contour count** - Number of motion regions detected
+
+**Output:** `{video_name}_motion_detected.mp4`
+
+**Use cases:**
+- Verify detection accuracy before batch processing
+- Create annotated evidence videos for insurance claims
+- Analyze motion patterns and trajectories
+- Debug and tune sensitivity parameters visually
+
+For detailed documentation, see [FEATURE_VIDEO_OUTPUT.md](./FEATURE_VIDEO_OUTPUT.md)
 
 ### 🔧 How It Works
 
