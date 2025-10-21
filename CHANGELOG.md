@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Enhanced
+- **视频片段持续标注** - 改进视频片段的运动检测标注
+  - 整个视频片段从头到尾都进行运动检测
+  - 检测到运动时实时绘制绿色矩形框
+  - 不再仅限于运动事件期间才显示标注
+  - 更完整的运动轨迹追踪
+
 ### 🔧 Fixed - 重要功能修正 v2
 - **截图轮廓简化** - 根据用户反馈优化标注
   - ❌ 移除不规则轮廓绘制

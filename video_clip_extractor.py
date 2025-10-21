@@ -208,8 +208,8 @@ class VideoClipExtractor:
             
             current_time = frame_count / video_fps
             
-            # 如果在运动事件期间且需要绘制轮廓
-            if draw_contours and event.start_time <= current_time <= event.end_time:
+            # 如果需要绘制轮廓，在整个视频中都进行运动检测和绘制
+            if draw_contours:
                 # 检测运动并获取轮廓
                 has_motion, _, contours = self.motion_detector.detect_motion(frame)
                 
