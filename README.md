@@ -199,7 +199,7 @@ The `config_example.py` includes optimized presets:
 - [Quick Start Guide](./QUICKSTART.md) - Detailed setup instructions
 - ### 📚 Documentation
 
-- [How to Run](./如何运行.md) - Chinese quick start tutorial
+- [How to Run](./How_to_run.md) - Quick start tutorial
 - [Documentation Index](./docs/README.md) - Complete technical documentation
   - [Video Clip Feature Guide](./docs/VIDEO_CLIP_FEATURE.md) - Video clip extraction feature
   - [Changelog](./docs/CHANGELOG.md) - Version history and updates

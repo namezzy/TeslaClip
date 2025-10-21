@@ -196,7 +196,7 @@ python3 main.py -i video.mp4 --output-video -s 25
 
 ### 📚 文档
 
-- [如何运行](./如何运行.md) - 中文快速入门教程
+- [如何运行](./How_to_run.md) - 快速入门教程
 - [文档索引](./docs/README.md) - 完整技术文档
   - [视频片段提取功能指南](./docs/VIDEO_CLIP_FEATURE.md) - 视频片段提取功能详解
   - [变更日志](./docs/CHANGELOG.md) - 版本历史和更新记录
