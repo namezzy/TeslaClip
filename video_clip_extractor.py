@@ -35,7 +35,7 @@ class VideoClipExtractor:
                  min_motion_duration: float = 3.0,
                  clip_before: float = 20.0,
                  clip_after: float = 20.0,
-                 min_area: int = 500):
+                 min_area: int = 300):
         """
         初始化视频片段提取器
         
@@ -223,11 +223,21 @@ class VideoClipExtractor:
                 # 检测运动并获取轮廓
                 has_motion, _, contours = self.motion_detector.detect_motion(frame)
                 
-                # 如果检测到运动，绘制绿色矩形边界框
+                # 如果检测到运动，绘制扩大的绿色矩形边界框
                 if has_motion and contours:
+                    frame_h, frame_w = frame.shape[:2]
                     for contour in contours:
                         x, y, w, h = cv2.boundingRect(contour)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                        
+                        # 扩大边界框，确保完整框住运动物体
+                        padding = max(15, int(min(w, h) * 0.15))  # 动态边距，至少15像素
+                        x = max(0, x - padding)
+                        y = max(0, y - padding)
+                        w = min(frame_w - x, w + 2 * padding)
+                        h = min(frame_h - y, h + 2 * padding)
+                        
+                        # 绘制更粗的绿色矩形框
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
             
             # 添加时间戳
             timestamp_str = self._format_timestamp(current_time)

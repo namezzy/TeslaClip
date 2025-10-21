@@ -11,7 +11,7 @@ from typing import Tuple, Optional, List
 class MotionDetector:
     """运动检测器类，负责检测视频帧中的运动"""
     
-    def __init__(self, sensitivity: int = 25, min_area: int = 500):
+    def __init__(self, sensitivity: int = 25, min_area: int = 300):
         """
         初始化运动检测器
         
@@ -54,10 +54,14 @@ class MotionDetector:
         threshold_value = self.sensitivity * 2.55  # 转换为0-255范围
         _, thresh = cv2.threshold(frame_diff, threshold_value, 255, cv2.THRESH_BINARY)
         
-        # 形态学操作，去除噪声
+        # 形态学操作，去除噪声并连接断裂的运动区域
         kernel = np.ones((5, 5), np.uint8)
-        thresh = cv2.dilate(thresh, kernel, iterations=2)
+        thresh = cv2.dilate(thresh, kernel, iterations=3)  # 增加膨胀次数，连接断裂区域
         thresh = cv2.erode(thresh, kernel, iterations=1)
+        
+        # 再次膨胀以确保运动区域连续
+        kernel_large = np.ones((7, 7), np.uint8)
+        thresh = cv2.dilate(thresh, kernel_large, iterations=2)
         
         # 查找轮廓
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -92,7 +96,7 @@ class VideoProcessor:
                  sensitivity: int = 25,
                  min_interval: float = 1.0,
                  fps: int = 2,
-                 min_area: int = 500):
+                 min_area: int = 300):
         """
         初始化视频处理器
         
@@ -186,13 +190,21 @@ class VideoProcessor:
         Returns:
             绘制后的帧
         """
-        # 只为每个轮廓绘制绿色矩形边界框
+        # 为每个轮廓绘制扩大的绿色矩形边界框
+        frame_h, frame_w = frame.shape[:2]
         for contour in contours:
             # 获取边界框
             x, y, w, h = cv2.boundingRect(contour)
             
-            # 只绘制绿色边界框
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # 扩大边界框，确保完整框住运动物体
+            padding = max(15, int(min(w, h) * 0.15))  # 动态边距，至少15像素
+            x = max(0, x - padding)
+            y = max(0, y - padding)
+            w = min(frame_w - x, w + 2 * padding)
+            h = min(frame_h - y, h + 2 * padding)
+            
+            # 绘制更粗的绿色边界框
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
         
         # 添加时间戳（左上角，白色）
         timestamp_str = self.format_timestamp(current_time)
