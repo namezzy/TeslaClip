@@ -113,12 +113,12 @@ class VideoProcessor:
                      callback=None,
                      output_video_path: Optional[str] = None) -> list:
         """
-        处理单个视频文件
+        处理单个视频文件，提取包含运动的截图
         
         Args:
             video_path: 视频文件路径
             callback: 回调函数，接收 (frame, timestamp, has_motion, current_frame, total_frames) 参数
-            output_video_path: 输出视频路径，如果指定则将检测到运动的帧写入视频并绘制轮廓
+            output_video_path: 已弃用，保留用于向后兼容
             
         Returns:
             提取的帧列表，每个元素为 (frame, timestamp) 元组
@@ -131,18 +131,6 @@ class VideoProcessor:
         # 获取视频信息
         video_fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        duration = total_frames / video_fps if video_fps > 0 else 0
-        
-        # 初始化视频写入器（如果需要）
-        video_writer = None
-        if output_video_path:
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            video_writer = cv2.VideoWriter(output_video_path, fourcc, video_fps, (width, height))
-            if not video_writer.isOpened():
-                print(f"警告: 无法创建输出视频文件: {output_video_path}")
-                video_writer = None
         
         # 计算帧间隔
         frame_interval = int(video_fps / self.process_fps) if video_fps > 0 else 1
@@ -168,18 +156,13 @@ class VideoProcessor:
                 
                 # 如果检测到运动
                 if has_motion:
-                    # 创建带有运动检测标注的帧
+                    # 创建带有运动检测标注的帧（绿色矩形框）
                     annotated_frame = self._draw_motion_contours(frame.copy(), contours, current_time)
                     
                     # 提取截图（如果距离上次提取已超过最小间隔）
-                    # 保存带有轮廓标注的图片
                     if (current_time - last_extract_time) >= self.min_interval:
                         extracted_frames.append((annotated_frame.copy(), current_time))
                         last_extract_time = current_time
-                    
-                    # 写入视频（只写入检测到运动的帧）
-                    if video_writer:
-                        video_writer.write(annotated_frame)
                 
                 # 调用回调函数（每个间隔帧调用一次）
                 if callback:
@@ -188,8 +171,6 @@ class VideoProcessor:
             frame_count += 1
         
         cap.release()
-        if video_writer:
-            video_writer.release()
             
         return extracted_frames
     
@@ -205,29 +186,17 @@ class VideoProcessor:
         Returns:
             绘制后的帧
         """
-        # 绘制运动轮廓（绿色）
-        cv2.drawContours(frame, contours, -1, (0, 255, 0), 2)
-        
-        # 为每个轮廓绘制边界框和信息
+        # 只为每个轮廓绘制绿色矩形边界框
         for contour in contours:
             # 获取边界框
             x, y, w, h = cv2.boundingRect(contour)
             
-            # 绘制红色边界框
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            
-            # 计算并显示面积（黄色文字）
-            area = cv2.contourArea(contour)
-            cv2.putText(frame, f"Area: {int(area)}px", (x, y - 10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
+            # 只绘制绿色边界框
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
         # 添加时间戳（左上角，白色）
         timestamp_str = self.format_timestamp(current_time)
         cv2.putText(frame, timestamp_str, (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        
-        # 添加轮廓计数（左上角第二行，白色）
-        cv2.putText(frame, f"Contours: {len(contours)}", (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         
         return frame

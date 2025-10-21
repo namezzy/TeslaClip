@@ -13,6 +13,7 @@ import cv2
 from tqdm import tqdm
 
 from video_processor import VideoProcessor
+from video_clip_extractor import VideoClipExtractor
 
 
 class BatchProcessor:
@@ -25,7 +26,10 @@ class BatchProcessor:
                  fps: int = 2,
                  image_format: str = 'jpg',
                  preview: bool = False,
-                 output_video: bool = False):
+                 extract_clips: bool = False,
+                 min_motion_duration: float = 3.0,
+                 clip_before: float = 20.0,
+                 clip_after: float = 20.0):
         """
         初始化批量处理器
         
@@ -36,7 +40,10 @@ class BatchProcessor:
             fps: 处理帧率
             image_format: 输出图像格式
             preview: 是否显示预览窗口
-            output_video: 是否生成带轮廓标注的输出视频
+            extract_clips: 是否提取视频片段
+            min_motion_duration: 最小连续运动时长（秒）
+            clip_before: 片段前提取时长（秒）
+            clip_after: 片段后提取时长（秒）
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -45,8 +52,20 @@ class BatchProcessor:
         self.fps = fps
         self.image_format = image_format.lower()
         self.preview = preview
-        self.output_video = output_video
+        self.extract_clips = extract_clips
+        self.min_motion_duration = min_motion_duration
+        self.clip_before = clip_before
+        self.clip_after = clip_after
         self.processor = VideoProcessor(sensitivity, min_interval, fps)
+        
+        # 如果启用视频片段提取，初始化提取器
+        if self.extract_clips:
+            self.clip_extractor = VideoClipExtractor(
+                sensitivity=sensitivity,
+                min_motion_duration=min_motion_duration,
+                clip_before=clip_before,
+                clip_after=clip_after
+            )
         
         self.total_videos = 0
         self.total_frames_extracted = 0
@@ -141,26 +160,19 @@ class BatchProcessor:
             video_output_dir = self.output_dir / video_name
             video_output_dir.mkdir(parents=True, exist_ok=True)
             
-            # 准备输出视频路径（如果需要）
-            output_video_path = None
-            if self.output_video:
-                output_video_path = str(video_output_dir / f"{video_name}_motion_detected.mp4")
-            
-            # 处理视频
+            # 1. 提取截图（始终执行）
             extracted_frames = self.processor.process_video(
                 str(video_path),
                 callback=progress_callback,
-                output_video_path=output_video_path
+                output_video_path=None  # 不再使用旧的视频输出功能
             )
             
-            # 确保进度条达到100%（处理最后几帧）
+            # 确保进度条达到100%
             if pbar:
-                # 获取视频总帧数
                 cap = cv2.VideoCapture(str(video_path))
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 cap.release()
                 
-                # 如果还有未更新的帧，更新到100%
                 remaining = total_frames - last_frame_count
                 if remaining > 0:
                     pbar.update(remaining)
@@ -179,6 +191,27 @@ class BatchProcessor:
                     saved_count += 1
                 else:
                     print(f"警告: 无法保存 {output_path}")
+            
+            # 显示截图提取结果
+            result_info = f"✓ 截图提取完成: {saved_count} 张"
+            print(result_info)
+            
+            # 2. 如果启用视频片段提取
+            if self.extract_clips:
+                print(f"\n开始提取视频片段...")
+                clips_output_dir = video_output_dir / "clips"
+                clips = self.clip_extractor.process_video(
+                    str(video_path),
+                    str(clips_output_dir),
+                    fps=self.fps
+                )
+                
+                if clips:
+                    print(f"✓ 视频片段提取完成: {len(clips)} 个片段")
+                    clips_size = sum(os.path.getsize(c) for c in clips) / (1024 * 1024)
+                    print(f"  总大小: {clips_size:.2f} MB")
+            
+            print(f"  输出目录: {video_output_dir}\n")
             
             # 显示结果信息
             result_info = f"✓ 完成: 提取了 {saved_count} 个活动帧"
@@ -232,31 +265,34 @@ class BatchProcessor:
         print(f"总提取帧数: {self.total_frames_extracted}")
         print(f"输出根目录: {self.output_dir.absolute()}")
         print(f"每个视频的输出都在独立的子文件夹中")
-        if self.output_video:
-            print(f"视频输出: 已生成（仅包含检测到运动的帧）")
+        if self.extract_clips:
+            print(f"视频片段: 已提取（连续运动>{self.min_motion_duration}秒的事件）")
 
 
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(
-        description='特斯拉视频活动提取器 - 从录像中提取包含活动的关键帧',
+        description='特斯拉视频活动提取器 - 从录像中提取包含活动的关键帧和视频片段',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  # 处理单个视频
+  # 提取截图（带绿色矩形轮廓）
   python main.py -i video.mp4
   
+  # 提取截图 + 视频片段（连续运动>3秒，提取前后20秒）
+  python main.py -i video.mp4 --extract-clips
+  
+  # 自定义视频片段参数
+  python main.py -i video.mp4 --extract-clips --motion-duration 5 --clip-before 30 --clip-after 30
+  
   # 处理整个文件夹
-  python main.py -i /path/to/videos -o ./output
+  python main.py -i /path/to/videos -o ./output --extract-clips
   
   # 调整灵敏度和间隔
   python main.py -i video.mp4 -s 20 --min-interval 2.0
   
   # 启用预览模式（用于调试）
   python main.py -i video.mp4 --preview
-  
-  # 输出带有运动检测轮廓的视频
-  python main.py -i video.mp4 --output-video
         """
     )
     
@@ -274,8 +310,16 @@ def main():
                        help='输出图像格式 (默认: jpg)')
     parser.add_argument('--preview', action='store_true',
                        help='启用实时预览（用于调试参数）')
-    parser.add_argument('--output-video', action='store_true',
-                       help='输出带有运动检测轮廓的视频文件')
+    
+    # 视频片段提取参数
+    parser.add_argument('--extract-clips', action='store_true',
+                       help='提取视频片段（检测到连续运动时）')
+    parser.add_argument('--motion-duration', type=float, default=3.0,
+                       help='触发提取的最小连续运动时长（秒）(默认: 3.0)')
+    parser.add_argument('--clip-before', type=float, default=20.0,
+                       help='运动事件前提取的时长（秒）(默认: 20.0)')
+    parser.add_argument('--clip-after', type=float, default=20.0,
+                       help='运动事件后提取的时长（秒）(默认: 20.0)')
     
     args = parser.parse_args()
     
@@ -292,6 +336,10 @@ def main():
         print("错误: FPS 必须大于 0")
         sys.exit(1)
     
+    if args.motion_duration <= 0:
+        print("错误: 运动时长必须大于 0")
+        sys.exit(1)
+    
     # 创建批量处理器并执行
     processor = BatchProcessor(
         output_dir=args.output,
@@ -300,7 +348,10 @@ def main():
         fps=args.fps,
         image_format=args.format,
         preview=args.preview,
-        output_video=args.output_video
+        extract_clips=args.extract_clips,
+        min_motion_duration=args.motion_duration,
+        clip_before=args.clip_before,
+        clip_after=args.clip_after
     )
     
     try:
@@ -310,6 +361,8 @@ def main():
         sys.exit(0)
     except Exception as e:
         print(f"\n错误: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 

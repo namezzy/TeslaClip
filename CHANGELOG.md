@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Fixed - 重要功能修正 v2
+- **截图轮廓简化** - 根据用户反馈优化标注
+  - ❌ 移除不规则轮廓绘制
+  - ❌ 移除红色边界框
+  - ❌ 移除面积标签和轮廓计数
+  - ✅ 只保留绿色矩形边界框
+  - ✅ 保留时间戳
+  - 画面更简洁清晰
+  
+- **视频输出重新设计** - 完全重写视频处理逻辑
+  - ❌ 移除旧的逐帧视频输出功能
+  - ✅ 新增独立的视频片段提取器 (`video_clip_extractor.py`)
+  - ✅ 检测连续运动超过 N 秒的事件
+  - ✅ 提取事件前后各 M 秒的视频片段
+  - ✅ 支持自定义参数（运动时长、前后缓冲时间）
+  - 更实用、更易于分析
+
+### ✨ Added
+- **VideoClipExtractor 模块** - 独立的视频片段提取功能
+  - `detect_motion_events()`: 检测所有运动事件
+  - `extract_clip()`: 提取单个事件的视频片段
+  - `process_video()`: 完整处理流程
+  - 支持批量处理
+  - 每个事件生成独立的视频文件
+
+### 📚 Documentation
+- 添加 VIDEO_CLIP_FEATURE.md 详细说明新功能
+- 更新命令行参数说明
+
 ### 🔧 Fixed - 重要功能修正
 - **截图轮廓标注** - 所有提取的截图现在都包含运动检测可视化
   - 绿色轮廓标记运动区域
