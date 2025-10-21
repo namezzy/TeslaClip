@@ -201,6 +201,16 @@ class VideoClipExtractor:
         frame_count = clip_start_frame
         written_frames = 0
         
+        # 预处理几帧让运动检测器稳定（不保存）
+        if draw_contours:
+            warmup_frames = min(5, clip_end_frame - clip_start_frame)
+            for _ in range(warmup_frames):
+                ret, warmup_frame = cap.read()
+                if ret:
+                    self.motion_detector.detect_motion(warmup_frame)
+            # 重新定位到起始帧
+            cap.set(cv2.CAP_PROP_POS_FRAMES, clip_start_frame)
+        
         while frame_count <= clip_end_frame:
             ret, frame = cap.read()
             if not ret:
@@ -208,8 +218,8 @@ class VideoClipExtractor:
             
             current_time = frame_count / video_fps
             
-            # 如果需要绘制轮廓，在整个视频中都进行运动检测和绘制
-            if draw_contours:
+            # 只在运动事件期间绘制轮廓
+            if draw_contours and event.start_time <= current_time <= event.end_time:
                 # 检测运动并获取轮廓
                 has_motion, _, contours = self.motion_detector.detect_motion(frame)
                 
@@ -218,6 +228,9 @@ class VideoClipExtractor:
                     for contour in contours:
                         x, y, w, h = cv2.boundingRect(contour)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            elif draw_contours:
+                # 即使不在事件期间，也要让检测器处理帧以保持状态连续
+                self.motion_detector.detect_motion(frame)
             
             # 添加时间戳
             timestamp_str = self._format_timestamp(current_time)
