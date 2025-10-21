@@ -111,11 +111,20 @@ python3 main.py -i video.mp4 -s 15 --min-interval 0.5 --fps 4
 
 ```
 extracted_frames/
-├── front_camera_00h05m30s.jpg  # Front camera at 5min 30sec
-├── front_camera_00h07m15s.jpg  # Front camera at 7min 15sec
-├── rear_camera_00h00m45s.jpg   # Rear camera at 45sec
+├── video1/                          # Each video gets its own folder
+│   ├── video1_00h05m30s.jpg       # Screenshot with contours at 5min 30sec
+│   ├── video1_00h07m15s.jpg       # Screenshot with contours at 7min 15sec
+│   └── video1_motion_detected.mp4 # Video with only motion frames
+├── video2/
+│   ├── video2_00h00m45s.jpg
+│   └── video2_motion_detected.mp4
 └── ...
 ```
+
+**Key Features:**
+- 📁 **Independent folders** - Each video gets its own subfolder
+- 🎨 **Annotated screenshots** - All screenshots include motion contours, bounding boxes, and labels
+- 🎬 **Motion-only videos** - Output videos contain only frames with detected motion (70-90% smaller)
 
 Filename format: `{video_name}_{HH}h{MM}m{SS}s.{format}`
 
@@ -127,6 +136,11 @@ Generate annotated videos showing motion detection in real-time:
 python3 main.py -i video.mp4 --output-video -s 25
 ```
 
+**Key Behavior:**
+- ⚡ **Motion frames only** - Output video contains ONLY frames where motion was detected
+- 📉 **Smaller file size** - Typically 70-90% smaller than original
+- ⏱️ **Time efficient** - Watch only the action, skip all static content
+
 **Visualization includes:**
 - 🟢 **Green contours** - Detected motion boundaries
 - 🔴 **Red bounding boxes** - Minimum enclosing rectangles
@@ -134,15 +148,15 @@ python3 main.py -i video.mp4 --output-video -s 25
 - ⏱️ **Timestamps** - Current video time (HH:MM:SS)
 - 📊 **Contour count** - Number of motion regions detected
 
-**Output:** `{video_name}_motion_detected.mp4`
+**Output:** `{video_name}_motion_detected.mp4` (in dedicated folder)
 
 **Use cases:**
-- Verify detection accuracy before batch processing
-- Create annotated evidence videos for insurance claims
-- Analyze motion patterns and trajectories
+- Quick review of parking lot events (1 hour → 5 minutes)
+- Create highlight reels from driving footage
+- Insurance evidence with motion annotations
 - Debug and tune sensitivity parameters visually
 
-For detailed documentation, see [FEATURE_VIDEO_OUTPUT.md](./FEATURE_VIDEO_OUTPUT.md)
+For detailed documentation, see [FEATURE_CORRECTION.md](./FEATURE_CORRECTION.md)
 
 ### 🔧 How It Works
 

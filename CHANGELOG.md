@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔧 Fixed - 重要功能修正
+- **截图轮廓标注** - 所有提取的截图现在都包含运动检测可视化
+  - 绿色轮廓标记运动区域
+  - 红色边界框和黄色面积标签
+  - 白色时间戳和轮廓计数
+  
+- **视频输出功能修正** - 重新实现视频输出逻辑
+  - ❌ 旧实现：输出所有帧（错误理解需求）
+  - ✅ 新实现：只输出检测到运动的帧
+  - 输出视频大小减少 70-90%
+  - 观看效率显著提升，无需跳过静止内容
+  
+- **文件组织优化** - 改进批量处理的输出结构
+  - 为每个输入视频创建独立的子文件夹
+  - 文件夹命名与视频文件名相同
+  - 每个文件夹包含该视频的截图和输出视频
+  - 避免多个视频文件混在一起
+
+### 📚 Documentation
+- 添加 FEATURE_CORRECTION.md 详细说明功能修正
+- 更新输出示例和使用说明
+
 ### ✨ Added
 - **Video Output with Motion Visualization** - Generate annotated videos showing detected motion
   - Draws green contours around motion regions

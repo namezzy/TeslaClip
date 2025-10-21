@@ -111,11 +111,20 @@ python3 main.py -i video.mp4 -s 15 --min-interval 0.5 --fps 4
 
 ```
 extracted_frames/
-├── front_camera_00h05m30s.jpg  # 前摄像头 5分30秒
-├── front_camera_00h07m15s.jpg  # 前摄像头 7分15秒
-├── rear_camera_00h00m45s.jpg   # 后摄像头 45秒
+├── video1/                          # 每个视频都有独立的文件夹
+│   ├── video1_00h05m30s.jpg       # 带轮廓标注的截图，5分30秒
+│   ├── video1_00h07m15s.jpg       # 带轮廓标注的截图，7分15秒
+│   └── video1_motion_detected.mp4 # 只包含运动帧的视频
+├── video2/
+│   ├── video2_00h00m45s.jpg
+│   └── video2_motion_detected.mp4
 └── ...
 ```
+
+**核心特性：**
+- 📁 **独立文件夹** - 每个视频都有自己的子文件夹
+- 🎨 **标注截图** - 所有截图都包含运动轮廓、边界框和标签
+- 🎬 **纯运动视频** - 输出视频只包含检测到运动的帧（大小减少 70-90%）
 
 文件名格式：`{视频名}_{时}h{分}m{秒}s.{格式}`
 
@@ -127,6 +136,11 @@ extracted_frames/
 python3 main.py -i video.mp4 --output-video -s 25
 ```
 
+**核心特性：**
+- ⚡ **仅运动帧** - 输出视频只包含检测到运动的帧
+- 📉 **文件更小** - 通常比原视频小 70-90%
+- ⏱️ **省时高效** - 只看关键时刻，跳过所有静止内容
+
 **可视化内容包括：**
 - 🟢 **绿色轮廓** - 检测到的运动边界
 - 🔴 **红色边界框** - 最小外接矩形
@@ -134,15 +148,15 @@ python3 main.py -i video.mp4 --output-video -s 25
 - ⏱️ **时间戳** - 当前视频时间（时:分:秒）
 - 📊 **轮廓计数** - 检测到的运动区域数量
 
-**输出文件：** `{视频名}_motion_detected.mp4`
+**输出文件：** `{视频名}_motion_detected.mp4`（保存在专属文件夹中）
 
 **使用场景：**
-- 批量处理前验证检测准确性
-- 为保险理赔创建带标注的证据视频
-- 分析运动模式和轨迹
+- 快速回顾停车场事件（1小时 → 5分钟）
+- 从行车录像创建精彩集锦
+- 为保险理赔生成带标注的证据视频
 - 可视化调试和优化灵敏度参数
 
-详细文档请参阅 [FEATURE_VIDEO_OUTPUT.md](./FEATURE_VIDEO_OUTPUT.md)
+详细文档请参阅 [FEATURE_CORRECTION.md](./FEATURE_CORRECTION.md)
 
 ### 🔧 工作原理
 

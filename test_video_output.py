@@ -59,7 +59,13 @@ def test_video_output():
     
     # 3. 检查输出视频是否存在
     print("\n步骤 3: 检查输出视频...")
-    output_video_path = Path(output_dir) / "test_video_motion_detected.mp4"
+    # 新的输出结构：每个视频有独立的文件夹
+    video_folder = Path(output_dir) / "test_video"
+    output_video_path = video_folder / "test_video_motion_detected.mp4"
+    
+    if not video_folder.exists():
+        print(f"✗ 视频输出文件夹不存在: {video_folder}")
+        return False
     
     if not output_video_path.exists():
         print(f"✗ 输出视频不存在: {output_video_path}")
@@ -117,8 +123,13 @@ def test_video_output():
     print("\n" + "=" * 60)
     print("✓ 所有测试通过！")
     print("=" * 60)
-    print(f"\n输出视频位置: {output_video_path.absolute()}")
-    print("你可以使用以下命令播放输出视频:")
+    print(f"\n输出文件夹: {video_folder.absolute()}")
+    print(f"输出视频: {output_video_path.absolute()}")
+    print("\n重要提示:")
+    print("  - 输出视频只包含检测到运动的帧（不是所有帧）")
+    print("  - 这使得视频更短，文件更小，更易于查看")
+    print("  - 所有截图都包含运动检测的轮廓标注")
+    print("\n你可以使用以下命令播放输出视频:")
     print(f"  ffplay {output_video_path}")
     print(f"  vlc {output_video_path}")
     print(f"  或直接用视频播放器打开文件")
