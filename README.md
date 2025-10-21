@@ -197,8 +197,14 @@ The `config_example.py` includes optimized presets:
 ### 📚 Documentation
 
 - [Quick Start Guide](./QUICKSTART.md) - Detailed setup instructions
-- [How to Run](./如何运行.md) - Chinese tutorial
-- [Configuration Examples](./config_example.py) - Preset configurations
+- ### 📚 Documentation
+
+- [How to Run](./如何运行.md) - Chinese quick start tutorial
+- [Documentation Index](./docs/README.md) - Complete technical documentation
+  - [Video Clip Feature Guide](./docs/VIDEO_CLIP_FEATURE.md) - Video clip extraction feature
+  - [Changelog](./docs/CHANGELOG.md) - Version history and updates
+  - [Quick Start](./docs/QUICKSTART.md) - Detailed quick start guide
+  - [Bug Fix Records](./docs/) - All bug fixes and solutions
 
 ### 🐛 Troubleshooting
 

@@ -196,9 +196,12 @@ python3 main.py -i video.mp4 --output-video -s 25
 
 ### 📚 文档
 
-- [快速入门指南](./QUICKSTART.md) - 详细设置说明（英文）
-- [如何运行](./如何运行.md) - 中文教程
-- [配置示例](./config_example.py) - 预设配置
+- [如何运行](./如何运行.md) - 中文快速入门教程
+- [文档索引](./docs/README.md) - 完整技术文档
+  - [视频片段提取功能指南](./docs/VIDEO_CLIP_FEATURE.md) - 视频片段提取功能详解
+  - [变更日志](./docs/CHANGELOG.md) - 版本历史和更新记录
+  - [快速入门](./docs/QUICKSTART.md) - 详细快速入门指南（英文）
+  - [Bug 修复记录](./docs/) - 所有 Bug 修复和解决方案
 
 ### 🐛 故障排除
 
