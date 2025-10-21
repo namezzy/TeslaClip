@@ -212,14 +212,6 @@ class BatchProcessor:
                     print(f"  总大小: {clips_size:.2f} MB")
             
             print(f"  输出目录: {video_output_dir}\n")
-            
-            # 显示结果信息
-            result_info = f"✓ 完成: 提取了 {saved_count} 个活动帧"
-            if self.output_video and output_video_path and os.path.exists(output_video_path):
-                video_size = os.path.getsize(output_video_path) / (1024 * 1024)  # MB
-                result_info += f"，生成视频 {video_size:.2f}MB"
-            result_info += f"\n  输出目录: {video_output_dir}"
-            print(result_info)
             return saved_count
             
         except Exception as e:
@@ -248,8 +240,8 @@ class BatchProcessor:
         print(f"输出根目录: {self.output_dir}")
         print(f"文件夹结构: 每个视频将创建独立的子文件夹")
         print(f"设置: 灵敏度={self.sensitivity}, 最小间隔={self.min_interval}s, FPS={self.fps}")
-        if self.output_video:
-            print(f"视频输出: 启用（只包含检测到运动的帧）")
+        if self.extract_clips:
+            print(f"视频片段提取: 启用（连续运动>{self.min_motion_duration}秒，前后{self.clip_before}/{self.clip_after}秒）")
         print("=" * 60)
         
         self.total_videos = len(video_files)
