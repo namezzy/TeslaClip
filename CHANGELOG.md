@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🐛 Fixed
+- **Progress Bar Display** - Fixed progress bar stuck at low percentage (~7%)
+  - Progress bar now correctly shows 0-100% during video processing
+  - Updated progress calculation to account for frame intervals
+  - Affects both single video and batch processing modes
+  - See [BUGFIX_PROGRESS_BAR.md](./BUGFIX_PROGRESS_BAR.md) for details
+
 ## [1.0.0] - 2025-10-21
 
 ### 🎉 Initial Release
