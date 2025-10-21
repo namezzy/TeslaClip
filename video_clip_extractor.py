@@ -218,19 +218,16 @@ class VideoClipExtractor:
             
             current_time = frame_count / video_fps
             
-            # 只在运动事件期间绘制轮廓
-            if draw_contours and event.start_time <= current_time <= event.end_time:
+            # 对整个视频片段进行运动检测和标注
+            if draw_contours:
                 # 检测运动并获取轮廓
                 has_motion, _, contours = self.motion_detector.detect_motion(frame)
                 
+                # 如果检测到运动，绘制绿色矩形边界框
                 if has_motion and contours:
-                    # 只绘制绿色矩形边界框
                     for contour in contours:
                         x, y, w, h = cv2.boundingRect(contour)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            elif draw_contours:
-                # 即使不在事件期间，也要让检测器处理帧以保持状态连续
-                self.motion_detector.detect_motion(frame)
             
             # 添加时间戳
             timestamp_str = self._format_timestamp(current_time)
