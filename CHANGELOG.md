@@ -8,11 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### 🐛 Fixed
-- **Progress Bar Display** - Fixed progress bar stuck at low percentage (~7%)
-  - Progress bar now correctly shows 0-100% during video processing
-  - Updated progress calculation to account for frame intervals
-  - Affects both single video and batch processing modes
-  - See [BUGFIX_PROGRESS_BAR.md](./BUGFIX_PROGRESS_BAR.md) for details
+- **Progress Bar Display (Updated)** - Fixed multiple progress bar issues
+  - Short videos (e.g., 10s) now correctly show 100% completion
+  - Previous fix for ~7% stuck issue
+  - Ensures all frames are accounted for in progress calculation
+  
+### ✨ Added
+- **Enhanced Progress Information** - Rich real-time processing details
+  - Processing speed display (frames/sec)
+  - Estimated time remaining (seconds)
+  - Current video timestamp (MM:SS format)
+  - All displayed using tqdm's set_postfix for clean output
+  
+### 📚 Documentation
+- See [BUGFIX_PROGRESS_ENHANCEMENT.md](./BUGFIX_PROGRESS_ENHANCEMENT.md) for details
 
 ## [1.0.0] - 2025-10-21
 
