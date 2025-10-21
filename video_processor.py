@@ -157,7 +157,7 @@ class VideoProcessor:
                     extracted_frames.append((frame.copy(), current_time))
                     last_extract_time = current_time
                 
-                # 调用回调函数
+                # 调用回调函数（每个间隔帧调用一次）
                 if callback:
                     callback(frame, current_time, has_motion, frame_count, total_frames)
             

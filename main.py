@@ -90,12 +90,18 @@ class BatchProcessor:
         
         # 创建进度条
         pbar = None
+        last_frame_count = 0
         
         def progress_callback(frame, timestamp, has_motion, current_frame, total_frames):
-            nonlocal pbar
+            nonlocal pbar, last_frame_count
             if pbar is None:
                 pbar = tqdm(total=total_frames, unit='帧', desc="处理进度")
-            pbar.update(1)
+            
+            # 更新进度：计算自上次回调以来处理的帧数
+            frames_processed = current_frame - last_frame_count
+            if frames_processed > 0:
+                pbar.update(frames_processed)
+                last_frame_count = current_frame
             
             # 如果启用预览
             if self.preview and has_motion:
